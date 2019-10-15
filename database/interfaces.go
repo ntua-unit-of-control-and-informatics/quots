@@ -14,8 +14,10 @@ type IApplicationDao interface {
 type IUsersDao interface {
 	CreateUser(userGot models.User) (userCreated models.User, err error)
 	GetUserById(id string) (userFound models.User, err error)
+	DeleteUser(id string) (usersDeleted int64, err error)
 	UpdateUserCredits(userToUpdate models.User) (userUpdated models.User, err error)
 	UpdateUsersSpentOn(userToUpdate models.User) (userUpdated models.User, err error)
+	UpdateUserEmailAndUsername(userToUpdate models.User) (userUpdated models.User, err error)
 	GetUsersPaginated(min int64, max int64) (counted int64, usersFound []*models.User, err error)
 	FindUserByEmail(email string) (userFound models.User, err error)
 }

@@ -33,6 +33,24 @@ func (uDao *UsersDao) GetUserById(id string) (userFound models.User, err error) 
 	return user, err
 }
 
+// Deletes user by ID
+func (uDao *UsersDao) DeleteUser(id string) (userDeleted int64, err error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+	dr, err := db.Collection("users").DeleteOne(context.TODO(), filter)
+	return dr.DeletedCount, err
+}
+
+// Updates user's email and username by ID
+func (uDao *UsersDao) UpdateUserEmailAndUsername(user models.User) (userUpdated models.User, err error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: user.Id}}
+	update := bson.M{"$set": bson.M{"email": user.Email}}
+	update = bson.M{"$set": bson.M{"username": user.Username}}
+	resp, erro := db.Collection(COLLECTION).UpdateOne(context.TODO(), filter, update)
+	var b []byte
+	resp.UnmarshalBSON(b)
+	return user, erro
+}
+
 // Updates Users Credits
 func (uDao *UsersDao) UpdateUserCredits(user models.User) (userUpdated models.User, err error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: user.Id}}

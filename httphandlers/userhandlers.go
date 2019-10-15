@@ -3,6 +3,7 @@ package httphandlers
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 
 	// db "quots/database"
 	models "quots/models"
@@ -14,7 +15,21 @@ import (
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var person models.User
 	_ = json.NewDecoder(r.Body).Decode(&person)
-	person.Credits = 100
+	credits := os.Getenv("CREDITS")
+	if credits == "" {
+		person.Credits = 40
+	} else {
+		cr, err := strconv.ParseFloat(credits, 64)
+		if err != nil {
+			err := models.ErrorReport{
+				Message: "Could not create user because of default credits value",
+				Status:  http.StatusNotAcceptable,
+			}
+			w.WriteHeader(http.StatusNotAcceptable)
+			json.NewEncoder(w).Encode(err)
+		}
+		person.Credits = cr
+	}
 	_, err := dbUserImpl.CreateUser(person)
 	if err != nil {
 		err := models.ErrorReport{
@@ -41,6 +56,23 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(err)
 	} else {
 		json.NewEncoder(w).Encode(user)
+	}
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	usersCounted, err := dbUserImpl.DeleteUser(id)
+	if err != nil {
+		err := models.ErrorReport{
+			Message: err.Error(),
+			Status:  http.StatusNotFound,
+		}
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(err)
+	} else {
+		w.WriteHeader(http.StatusGone)
+		json.NewEncoder(w).Encode(usersCounted)
 	}
 }
 
@@ -111,6 +143,22 @@ func UpdateCredits(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func UpdateEmailAndName(w http.ResponseWriter, r *http.Request) {
+	var person models.User
+	_ = json.NewDecoder(r.Body).Decode(&person)
+	user, err := dbUserImpl.UpdateUserEmailAndUsername(person)
+	if err != nil {
+		err := models.ErrorReport{
+			Message: err.Error(),
+			Status:  http.StatusNotFound,
+		}
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(err)
+	} else {
+		json.NewEncoder(w).Encode(user)
+	}
+}
+
 func UserQuotes(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -128,7 +176,6 @@ func UserQuotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if appid != "" && usage != "" && size != "" {
-
 		app, err := dbAppImpl.GetApplicationBiId(appid)
 		if err != nil {
 			err := models.ErrorReport{
@@ -157,6 +204,9 @@ func UserQuotes(w http.ResponseWriter, r *http.Request) {
 				Proceed: true,
 			}
 			user.Credits = user.Credits - costall
+			if user.Credits < 0 {
+				user.Credits = 0
+			}
 			index := indexOf(appid, user)
 			if index == -1 {
 				m := make(map[string]float64)

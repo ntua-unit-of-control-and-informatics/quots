@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  mongo:
+    image: mongo
+    container_name: "quots-db"
+    ports:
+      - 27017:27017
+    networks:
+      - quots-network
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    volumes:
+      - ./data/db:/data/db
+    deploy:
+        replicas: 1
+        restart_policy:
+          condition: unless-stopped
+  quots:
+    image: pantelispanka/quots
+    ports:
+      - 8000:8000
+    environment:
+      - MONGO_URL=mongo:27017
+      - CREDITS=20
+      - DATABASE=quotsdb
+      - QUOTS_USER=QUOTS
+      - QUOTS_PASSWORD=QUOTS
+    depends_on:
+      - mongo
+    deploy:
+        replicas: 1
+        restart_policy:
+          condition: unless-stopped
+
+networks:
+  quots-network:
+    external: true

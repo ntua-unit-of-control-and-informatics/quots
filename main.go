@@ -68,6 +68,8 @@ func main() {
 	r.HandleFunc("/users", middleware.AuthMiddleware(httphandlers.CreateUser)).Methods("POST")
 	r.HandleFunc("/users", middleware.AuthMiddleware(httphandlers.GetUsers)).Queries("min", "{min}").Queries("max", "{max}").Queries("email", "{email}").Methods("GET")
 	r.HandleFunc("/users/{id}", middleware.AuthMiddleware(httphandlers.GetUser)).Methods("GET")
+	r.HandleFunc("/users/{id}", middleware.AuthMiddleware(httphandlers.DeleteUser)).Methods("DELETE")
+	r.HandleFunc("/users/{id}", middleware.AuthMiddleware(httphandlers.UpdateEmailAndName)).Methods("PUT")
 	// r.HandleFunc("/users/email", middleware.AuthMiddleware(httphandlers.GetUserByEmail)).Queries("email", "{email}").Methods("GET")
 	r.HandleFunc("/users/credits", middleware.AuthMiddleware(httphandlers.UpdateCredits)).Methods("PUT")
 	r.HandleFunc("/users/{id}/quots", middleware.AuthMiddleware(httphandlers.UserQuotes)).Queries("appid", "{appid}").Queries("usage", "{usage}").Queries("size", "{size}").Methods("GET")
@@ -87,5 +89,5 @@ func main() {
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "DELETE", "PUT", "OPTIONS"})
 	allowedHeaders := handlers.AllowedHeaders([]string{"*"})
 	exposedHeaders := handlers.ExposedHeaders([]string{"*"})
-	log.Fatal(http.ListenAndServe(":8000", handlers.CORS(allowedOrigins, allowedHeaders, allowedMethods, exposedHeaders, handlers.IgnoreOptions())(r)))
+	log.Fatal(http.ListenAndServe(":8002", handlers.CORS(allowedOrigins, allowedHeaders, allowedMethods, exposedHeaders, handlers.IgnoreOptions())(r)))
 }

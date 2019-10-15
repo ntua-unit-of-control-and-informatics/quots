@@ -59,7 +59,7 @@ func AuthMiddleware(h http.HandlerFunc) http.HandlerFunc {
 			}
 			if app.AppSecret != clientSecret {
 				err := models.ErrorReport{
-					Message: err.Error(),
+					Message: "Wrong app secret",
 					Status:  http.StatusUnauthorized,
 				}
 				w.WriteHeader(http.StatusUnauthorized)
